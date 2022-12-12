@@ -1,15 +1,24 @@
 // Include the necessary OpenGL headers
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 // Include the standard C++ headers
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <glm/gtx/string_cast.hpp>
 
 const int WIDTH = 640;
 const int HEIGHT = 480;
 float* g_color_buffer;
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
 
 // Function to set the pixel at the given coordinates to the given color
 void setPixel(int x, int y, float r, float g, float b) {
@@ -29,7 +38,11 @@ int main() {
     }
 
     // Create a window and make its context current
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Rendering Pipeline", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "CPU Bunny", NULL, NULL);
+
+    // Set key callback
+    glfwSetKeyCallback(window, key_callback);
+
     if (!window) {
         glfwTerminate();
         return -1;
@@ -52,6 +65,11 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         // Clear the color buffer
         glClear(GL_COLOR_BUFFER_BIT);
+
+
+//        glm::vec3 v1(0.0f, 0.0f, 0.0f);
+//        std::cout << glm::to_string(v1) << std::endl;
+
 
         // Loop over all the pixels in the window
         for (int y = 0; y < HEIGHT; y++) {

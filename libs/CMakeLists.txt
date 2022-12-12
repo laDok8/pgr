@@ -41,3 +41,8 @@ target_link_libraries(GLEW_1130
         ${OPENGL_LIBRARY}
         ${EXTRA_LIBS}
         )
+
+
+### GLM ###
+include_directories(glm-0.9.9.8/glm)
+
