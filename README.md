@@ -11,17 +11,13 @@ Důraz bude kladen na jednoduchost a přehlednost zdrojového kódu, na efektivi
 - [x] projekce
 - [x] indices
 - [x] kralik
-- [ ] [optional] kresli trojuhelnik s barvou
+- [x] [optional] kresli trojuhelnik s barvou
 - [ ] [optional] kresli trojuhelnik + texturou
 - [ ] [optional] kresli trojuhelnik + osvetlenim
-- [ ] [optional] kresli trojuhelnik + projekci ad
-- [ ] [optional] kresli trojuhelnik + perspektivou ad
-- [ ] [optional] kresli trojuhelnik + z-bufferem
+- [x] [optional] kresli trojuhelnik + z-bufferem
 - [ ] [optional] kresli trojuhelnik + backface cullingem
 - [ ] [optional] kresli trojuhelnik + normal mapping
-- [ ] [optional] kresli trojuhelnik + parallax mapping
 - [ ] [optional] kresli trojuhelnik + shadow mapping
 - [ ] [optional] kresli trojuhelnik + deferred shading
-- [ ] [optional] kresli trojuhelnik + post processing
 - [ ] [optional] kresli trojuhelnik + volumetric lighting
 - [ ] [optional] kresli trojuhelnik + ray tracing

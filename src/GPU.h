@@ -17,10 +17,9 @@ public:
 private:
 
 
-    float *color_buffer;
+    float *color_buffer, *depth_buffer;
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
-    glm::vec4 viewport;
     int WIDTH, HEIGHT;
 
     void setPixel(int x, int y, float r, float g, float b);
@@ -32,6 +31,8 @@ private:
     void rasterizeTriangle(const std::vector<primitive> primitives);
 
     std::vector<oPrimitive> clip(oPrimitive p);
+
+    glm::vec3 FS(glm::vec3 vec1);
 };
 
 
