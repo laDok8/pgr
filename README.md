@@ -6,11 +6,11 @@ Důraz bude kladen na jednoduchost a přehlednost zdrojového kódu, na efektivi
 
 ## steps
 - [ ] procist dokumentace opengl, glfw
-- [ ] mrknout izg a cvika
-- [ ] kresli trojuhelnik
-- [ ] projekce
-- [ ] indices
-- [ ] kralik
+- [x] mrknout izg a cvika
+- [x] kresli trojuhelnik
+- [x] projekce
+- [x] indices
+- [x] kralik
 - [ ] [optional] kresli trojuhelnik s barvou
 - [ ] [optional] kresli trojuhelnik + texturou
 - [ ] [optional] kresli trojuhelnik + osvetlenim
