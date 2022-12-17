@@ -30,6 +30,8 @@ private:
     std::vector<primitive> getPrimitives();
 
     void rasterizeTriangle(const std::vector<primitive> primitives);
+
+    std::vector<oPrimitive> clip(oPrimitive p);
 };
 
 

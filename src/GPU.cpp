@@ -2,6 +2,7 @@
 #include <vector>
 #include <array>
 #include <glm/ext/matrix_projection.hpp>
+#include <iostream>
 #include "model.h"
 #include "GPU.h"
 
@@ -22,6 +23,10 @@ GPU::~GPU() {
 
 // Function to set the pixel at the given coordinates to the given color
 void GPU::setPixel(int x, int y, float r, float g, float b) {
+    if(x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
+        //std::cerr << "Pixel out of bounds: " << x << ", " << y << std::endl;
+        return;
+    }
     // Calculate the index into the color buffer
     int index = (x + y * WIDTH) * 3;
 
@@ -42,14 +47,34 @@ glm::vec3 GPU::barycentric(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 p
 }
 
 void GPU::rasterizeTriangle(const vector<primitive> primitives) {
+
+    glm::mat4 mvp = projectionMatrix * viewMatrix * glm::mat4(1.0f);
+
     vector<array<glm::vec3, 3>> transformedTriangles;
     for (const auto &triangle: primitives) {
-        array<glm::vec3, 3> transformedTriangle;
+        oPrimitive v;
         for (int i = 0; i < 3; i++) {
-            glm::vec3 t1 = glm::project(triangle[i].position, viewMatrix, projectionMatrix, viewport);
-            transformedTriangle[i] = t1;
+            //to clip space
+            glm::vec4 t1 = mvp * glm::vec4(triangle[i].position, 1.0f);
+
+            v[i].position = t1;
         }
-        transformedTriangles.push_back(transformedTriangle);
+
+
+        //clip may result to 0-2 triangles
+        vector<oPrimitive> x = clip(v);
+        for(auto &t: x) {
+            array<glm::vec3, 3> transformedTriangle;
+            for (int i = 0; i < 3; i++) {
+                //to screen space
+                glm::vec3 t1(0.f);
+                t1.x = (t[i].position.x/t[i].position.w + 1.0f) * WIDTH / 2.0f;
+                t1.y = (t[i].position.y/t[i].position.w + 1.0f) * HEIGHT / 2.0f;
+                t1.z = t[i].position.z/t[i].position.w;
+                transformedTriangle[i] = t1;
+            }
+            transformedTriangles.push_back(transformedTriangle);
+        }
     }
 
 
@@ -71,12 +96,77 @@ void GPU::rasterizeTriangle(const vector<primitive> primitives) {
                 if (bary.x < 0 || bary.y < 0 || bary.z < 0) continue;
 
                 // Set pixel color using barycentric coordinates
-                setPixel(x, y, 1.f, 1.f, 1.f);
+                setPixel(x, y, bary.z, 1.f, 1.f);
             }
         }
     }
 
 }
+
+
+
+vector<oPrimitive> GPU::clip(oPrimitive p)
+{
+
+    vector<oPrimitive> clippedPrimitives;
+    std::vector<oVertex> overtex({p[0], p[1], p[2]});
+    struct oVertex help;
+
+    //CLIPING PART
+    float t;
+    //calculating new points + interpolation
+    for(int i = 0; i < 3;i++){
+        float divvect;
+        //choosing vector
+        if(i==2)
+            divvect = overtex[0].position[3] - overtex[2].position[3] + overtex[0].position[2] - overtex[2].position[2];
+        else
+            divvect = overtex[i+1].position[3] - overtex[i].position[3] + overtex[i+1].position[2] - overtex[i].position[2];
+
+        t = (-overtex[i].position[3] - overtex[i].position[2] )/divvect;
+        //toCull
+        if(t > 0 && t < 1) {
+
+            if(i==2)
+                help.position = overtex[2].position + t*(overtex[0].position - overtex[2].position);
+            else{
+                help.position = overtex[i].position + t*(overtex[i+1].position - overtex[i].position);
+            }
+            overtex.push_back(help);
+        }
+    }
+
+    bool delFlag=false;
+    //delete old vertices
+    for (int j = 2; j >= 0; j--) {
+        if (-overtex[j].position[3] > overtex[j].position[2]) {
+            overtex.erase(overtex.begin() + j);
+            delFlag = true;
+
+        }
+    }
+
+    //empty
+    const glm::vec4 bad{0,0,0,0};
+    if(overtex[0].position == bad){
+        return clippedPrimitives;
+    }
+
+    //asembly
+    if(overtex.size() == 3){
+        if(!delFlag)
+            clippedPrimitives.push_back({overtex[0].position,overtex[1].position,overtex[2].position});
+        else
+            clippedPrimitives.push_back({overtex[2].position,overtex[1].position,overtex[0].position});
+    }
+    if(overtex.size() == 4){
+        clippedPrimitives.push_back({overtex[0].position,overtex[1].position,overtex[2].position});
+        clippedPrimitives.push_back({overtex[0].position,overtex[2].position,overtex[3].position});
+
+    }
+    return clippedPrimitives;
+}
+
 
 
 vector<primitive> GPU::getPrimitives() {
@@ -85,10 +175,8 @@ vector<primitive> GPU::getPrimitives() {
 
     for (auto &indice: bunnyIndices) {
         primitive triangle = {bunnyVertices[indice[0]], bunnyVertices[indice[1]], bunnyVertices[indice[2]]};
+
         //TODO: clip a camera normal pohyb
-        for (int i = 0; i < 3; i++) {
-            triangle[i].position = triangle[i].position;
-        }
         primitives.push_back(triangle);
     }
 
