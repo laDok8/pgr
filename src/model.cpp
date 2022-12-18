@@ -1,12 +1,60 @@
 //model vertices/indices taken from PGR excercise
 #include "model.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <iostream>
+
+
+model::model() {
+    // Load the OBJ file using Assimp
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFile("/home/lada/repo/PGR/proj/model/bunny.obj", aiProcess_Triangulate);
+
+    // Check for errors
+        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+            std::cerr << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+        }
+
+    // Get mesh data
+        const aiMesh* mesh = scene->mMeshes[0];
+
+    // Store the vertices and indices in your own data structures
+        std::vector<float> vertices;
+        vertices.reserve(mesh->mNumVertices * 3); // 3 coordinates per vertex
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            BunnyVertex vertex;
+            vertex.position = {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
+            vertex.normal = {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
+            vertex.uv = {mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y,1.f};
+            objDataVertex.push_back(vertex);
+        }
+
+        for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+            const aiFace& face = mesh->mFaces[i];
+            objDataIndice.push_back({face.mIndices[0], face.mIndices[1], face.mIndices[2]});
+        }
+}
+
+std::vector<struct BunnyVertex> model::getPrimitives() {
+    return objDataVertex;
+}
+
+std::vector<std::vector<VertexIndex>> model::getIndices() {
+    return objDataIndice;
+}
+
+model::~model() {
+
+}
+
 
 struct BunnyVertex const squareVertices[8] = {
-        {{-0.5f, -0.5f, 0.f}, {-0.18915f, 0.919645f, 0.344203f}},
-        {{0.5f,  -0.5f, 0.f}, {-0.18915f, 0.919645f, 0.344203f}},
-        {{-0.5f, 0.5f,  0.f}, {-0.18915f, 0.919645f, 0.344203f}},
-        {{0.5f,  0.5f,  0.f}, {-0.18915f, 0.919645f, 0.344203f}},
+        {{-0.5f,        -0.5f,        0.f},  {-0.18915f,        0.919645f,       0.344203f}},
+        {{0.5f,         -0.5f,        0.f},  {-0.18915f,        0.919645f,       0.344203f}},
+        {{-0.5f,        0.5f,         0.f},  {-0.18915f,        0.919645f,       0.344203f}},
+        {{0.5f,         0.5f,         0.f},  {-0.18915f,        0.919645f,       0.344203f}},
         {{-0.5f + 0.2f, -0.5f + 0.2f, 0.2f}, {-0.18915f + 0.3f, 0.91964f - 0.2f, 0.344203f}},
         {{0.5f + 0.2f,  -0.5f + 0.2f, 0.2f}, {-0.18915f + 0.3f, 0.91964f - 0.2f, 0.344203f}},
         {{-0.5f + 0.2f, 0.5f + 0.2f,  0.2f}, {-0.18915f + 0.3f, 0.91964f - 0.2f, 0.344203f}},

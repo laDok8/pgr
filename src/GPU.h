@@ -12,6 +12,7 @@ public:
     ~GPU();
 
     float *render(glm::mat4 viewMatrix);
+    unsigned char* data;
 
 private:
 

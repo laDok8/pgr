@@ -5,6 +5,9 @@
 #include <iostream>
 #include "model.h"
 #include "GPU.h"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include "stb_image.h"
 
 
 using namespace std;
@@ -14,7 +17,7 @@ GPU::GPU(const int WIDTH, const int HEIGHT) {
     this->HEIGHT = HEIGHT;
     color_buffer = new float[WIDTH * HEIGHT * 3];
     depth_buffer = new float[WIDTH * HEIGHT * 3];
-    projectionMatrix = glm::perspective(45.0f, (float) WIDTH / (float) HEIGHT, 0.1f, 100.0f);;
+    projectionMatrix = glm::perspective(45.0f, (float) WIDTH / (float) HEIGHT, 0.1f, 100.0f);
 }
 
 GPU::~GPU() {
@@ -166,10 +169,21 @@ vector<primitive> GPU::getPrimitives() {
 
     // pull VS and assembly
     //for (auto &indice: squareIndices) triangles.push_back({VS(squareVertices[indice[0]]), VS(squareVertices[indice[1]]), VS(squareVertices[indice[2]])});
-    for (auto &indice: bunnyIndices) {
-        primitive triangle = {VS(bunnyVertices[indice[0]]), VS(bunnyVertices[indice[1]]), VS(bunnyVertices[indice[2]])};
-        triangles.push_back(triangle);
-    }
+
+    //for (auto &indice: bunnyIndices) {
+    //    primitive triangle = {VS(bunnyVertices[indice[0]]), VS(bunnyVertices[indice[1]]), VS(bunnyVertices[indice[2]])};
+    //    triangles.push_back(triangle);
+    //}
+
+    //initiate model from model.h and get indices
+    model model;
+    auto indices = model.getIndices();
+    auto vertices = model.getPrimitives();
+    for (auto &indice: indices) {
+            primitive triangle = {VS(vertices[indice[0]]), VS(vertices[indice[1]]), VS(vertices[indice[2]])};
+            triangles.push_back(triangle);
+        }
+
 
     vector<primitive> clippedTriangles;
     //clipping
@@ -201,6 +215,15 @@ vector<primitive> GPU::getPrimitives() {
 }
 
 float *GPU::render(glm::mat4 viewMatrix) {
+    int width, height, numChannels;
+
+    data = stbi_load("/home/lada/repo/PGR/proj/model/bunny.png", &width,&height,&numChannels, 0);
+    if(!data) {
+        std::cerr << "Failed to load texture" << std::endl;
+        if(stbi_failure_reason())
+            std::cerr << stbi_failure_reason();
+    }
+
     this->viewMatrix = viewMatrix;
     //clear buffer (easier than 0.f and 1.1f)
     memset(reinterpret_cast<wchar_t *>(color_buffer), WCHAR_MIN, WIDTH * HEIGHT * 3 * sizeof(float));
@@ -224,6 +247,21 @@ glm::vec3 GPU::FS(iFrag frag) {
     glm::vec3 pos = frag.attrib[0];
     glm::vec3 norm = frag.attrib[1];
     glm::vec3 light = glm::vec3(10.f, 10.f, 10.f);
+
+
+
+
+    //texture
+    glm::vec2 uv = frag.attrib[2];
+    int x = uv.x * 3072;
+    int y = uv.y * 3072;
+    int idx = (y * 3072 + x) * 3;
+    glm::vec3 texColor = glm::vec3(data[idx] / 255.f, data[idx + 1] / 255.f, data[idx + 2] / 255.f);
+    return texColor;
+
+
+
+    return glm::vec3(1.f, 1.f, 1.f);
 
     //Compute PhongLighting
     glm::vec3 lightVectNorm = glm::normalize(light - pos);
@@ -266,6 +304,7 @@ oVertex GPU::VS(const BunnyVertex &vertex) {
     outVertex.position = mvp * glm::vec4(vertex.position, 1.0f);
     outVertex.attrib.push_back(vertex.position);
     outVertex.attrib.push_back(vertex.normal);
+    outVertex.attrib.push_back(vertex.uv);
 
     return outVertex;
 }

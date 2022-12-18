@@ -10,6 +10,7 @@ set(ALL_LIBS
         ${OPENGL_LIBRARY}
         glfw
         GLEW_1130
+        assimp
         )
 
 set(SOURCES
@@ -25,6 +26,5 @@ add_definitions(
         -D_CRT_SECURE_NO_WARNINGS
 )
 set(CMAKE_CXX_STANDARD 17)
-
 add_executable(proj ${SOURCES})
 target_link_libraries(proj ${ALL_LIBS})

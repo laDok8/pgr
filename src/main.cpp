@@ -18,7 +18,7 @@ const int HEIGHT = 480;
 glm::vec3 position(0.0f, 0.0f, 4.f);
 glm::vec3 target(0.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
-float radius = 4.0f;
+float radius = 0.8f;
 float angle = glm::half_pi<float>();
 
 
@@ -60,7 +60,7 @@ int main() {
 
     // Initialize GLEW
     if (glewInit() != GLEW_OK) {
-        glfwTerminate();
+        glfwTerminate(); //TODO: delete
         return -1;
     }
 

@@ -46,3 +46,7 @@ target_link_libraries(GLEW_1130
 ### GLM ###
 include_directories(glm-0.9.9.8/glm)
 
+
+## ASSIMP ##
+add_subdirectory(assimp-5.2.5)
+include_directories(assimp-5.2.5/include/assimp)

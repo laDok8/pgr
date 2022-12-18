@@ -16,15 +16,16 @@
 struct BunnyVertex {
     glm::vec3 position;  ///< position of vertex
     glm::vec3 normal;    ///< normal of vertex
+    glm::vec3 uv;    /// UV 3rd codrinate for simpler procesing
 };
 struct oVertex {
     glm::vec4 position;  ///< position of vertex
-    std::vector<glm::vec3> attrib;    // 0- pos 1- norm
+    std::vector<glm::vec3> attrib;    // 0- pos 1- norm 2-uv
 };
 
 struct iFrag {
     glm::vec4 position;  ///< position of vertex
-    std::vector<glm::vec3> attrib;    // 0- pos 1- norm
+    std::vector<glm::vec3> attrib;    // 0- pos 1- norm 2-uv
 };
 
 /// This variable contains vertices of Standford bunny.
@@ -39,6 +40,20 @@ extern const VertexIndex bunnyIndices[2092][3];
 typedef std::array<oVertex, 3> primitive;
 extern struct BunnyVertex const squareVertices[8];
 extern const VertexIndex squareIndices[4][3];
+
+
+
+class model {
+    public:
+    model();
+    ~model();
+    void prepareModel();
+    std::vector<struct BunnyVertex> getPrimitives();
+    std::vector<std::vector<VertexIndex>> getIndices();
+    private:
+    std::vector<struct BunnyVertex> objDataVertex;
+    std::vector<std::vector<VertexIndex>> objDataIndice;
+};
 
 
 #endif //PGRPROJECT_MODEL_H
