@@ -9,7 +9,6 @@ add_subdirectory(libs)
 set(ALL_LIBS
         ${OPENGL_LIBRARY}
         glfw
-        GLEW_1130
         assimp
         )
 

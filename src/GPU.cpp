@@ -5,7 +5,6 @@
 #include <iostream>
 #include "model.h"
 #include "GPU.h"
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "stb_image.h"
 

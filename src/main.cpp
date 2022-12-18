@@ -1,5 +1,4 @@
 // Include the necessary OpenGL headers
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
@@ -57,12 +56,6 @@ int main() {
         return -1;
     }
     glfwMakeContextCurrent(window);
-
-    // Initialize GLEW
-    if (glewInit() != GLEW_OK) {
-        glfwTerminate(); //TODO: delete
-        return -1;
-    }
 
     // Set the clear color to black
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

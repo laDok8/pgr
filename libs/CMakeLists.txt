@@ -26,23 +26,6 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             )
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-### GLEW ###
-
-set(GLEW_SOURCE glew-2.1.0/src/glew.c)
-set(GLEW_HEADERS)
-
-
-add_library(GLEW_1130 STATIC
-        ${GLEW_SOURCE}
-        ${GLEW_INCLUDE}
-        )
-
-target_link_libraries(GLEW_1130
-        ${OPENGL_LIBRARY}
-        ${EXTRA_LIBS}
-        )
-
-
 ### GLM ###
 include_directories(glm-0.9.9.8/glm)
 
