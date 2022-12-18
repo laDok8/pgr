@@ -2,21 +2,20 @@
 #include <vector>
 #include <array>
 #include <glm/ext/matrix_projection.hpp>
-#include <iostream>
-#include "model.h"
 #include "GPU.h"
+#include "model.h"
 #include <GLFW/glfw3.h>
-#include "stb_image.h"
 
 
 using namespace std;
 
-GPU::GPU(const int WIDTH, const int HEIGHT) {
+GPU::GPU(const int WIDTH, const int HEIGHT, const model &m) {
     this->WIDTH = WIDTH;
     this->HEIGHT = HEIGHT;
     color_buffer = new float[WIDTH * HEIGHT * 3];
     depth_buffer = new float[WIDTH * HEIGHT * 3];
     projectionMatrix = glm::perspective(45.0f, (float) WIDTH / (float) HEIGHT, 0.1f, 100.0f);
+    this->m = m;
 }
 
 GPU::~GPU() {
@@ -122,8 +121,8 @@ vector<primitive> GPU::clip(primitive p) {
                 help.position = overtex[i].position + t * (overtex[i + 1].position - overtex[i].position);
             }
             //interpolate attributes
-            for(int z = 0; z < overtex[0].attrib.size(); z++){
-                    help.attrib.push_back(overtex[2].attrib[z] + t*(overtex[2].attrib[z] - overtex[0].attrib[z]));
+            for (int z = 0; z < overtex[0].attrib.size(); z++) {
+                help.attrib.push_back(overtex[2].attrib[z] + t * (overtex[2].attrib[z] - overtex[0].attrib[z]));
             }
             overtex.push_back(help);
         }
@@ -138,7 +137,6 @@ vector<primitive> GPU::clip(primitive p) {
 
         }
     }
-    //TODO: add interpolation
 
     //empty
     const glm::vec4 bad{0, 0, 0, 0};
@@ -166,22 +164,12 @@ vector<primitive> GPU::clip(primitive p) {
 vector<primitive> GPU::getPrimitives() {
     vector<primitive> triangles;
 
-    // pull VS and assembly
-    //for (auto &indice: squareIndices) triangles.push_back({VS(squareVertices[indice[0]]), VS(squareVertices[indice[1]]), VS(squareVertices[indice[2]])});
-
-    //for (auto &indice: bunnyIndices) {
-    //    primitive triangle = {VS(bunnyVertices[indice[0]]), VS(bunnyVertices[indice[1]]), VS(bunnyVertices[indice[2]])};
-    //    triangles.push_back(triangle);
-    //}
-
-    //initiate model from model.h and get indices
-    model model;
-    auto indices = model.getIndices();
-    auto vertices = model.getPrimitives();
+    auto indices = m.getIndices();
+    auto vertices = m.getPrimitives();
     for (auto &indice: indices) {
-            primitive triangle = {VS(vertices[indice[0]]), VS(vertices[indice[1]]), VS(vertices[indice[2]])};
-            triangles.push_back(triangle);
-        }
+        primitive triangle = {VS(vertices[indice[0]]), VS(vertices[indice[1]]), VS(vertices[indice[2]])};
+        triangles.push_back(triangle);
+    }
 
 
     vector<primitive> clippedTriangles;
@@ -213,17 +201,11 @@ vector<primitive> GPU::getPrimitives() {
     return transformedTriangles;
 }
 
-float *GPU::render(glm::mat4 viewMatrix) {
+float *GPU::render(glm::mat4 viewMatrix, glm::vec3 camera) {
     int width, height, numChannels;
 
-    data = stbi_load("/home/lada/repo/PGR/proj/model/bunny.png", &width,&height,&numChannels, 0);
-    if(!data) {
-        std::cerr << "Failed to load texture" << std::endl;
-        if(stbi_failure_reason())
-            std::cerr << stbi_failure_reason();
-    }
-
     this->viewMatrix = viewMatrix;
+    this->camera = camera;
     //clear buffer (easier than 0.f and 1.1f)
     memset(reinterpret_cast<wchar_t *>(color_buffer), WCHAR_MIN, WIDTH * HEIGHT * 3 * sizeof(float));
     memset(reinterpret_cast<wchar_t *>(depth_buffer), WCHAR_MAX, WIDTH * HEIGHT * 3 * sizeof(float));
@@ -245,59 +227,33 @@ glm::vec3 GPU::FS(iFrag frag) {
 
     glm::vec3 pos = frag.attrib[0];
     glm::vec3 norm = frag.attrib[1];
-    glm::vec3 light = glm::vec3(10.f, 10.f, 10.f);
-
-
-
+    glm::vec2 uv = frag.attrib[2];
+    glm::vec3 light = glm::vec3(10.f, 10.f, 10.f); // hardcoded light position
+    //glm::vec3 camera(0.0f, 0.0f, 4.f);//TODO BEWARE
 
     //texture
-    glm::vec2 uv = frag.attrib[2];
-    int x = uv.x * 3072;
-    int y = uv.y * 3072;
-    int idx = (y * 3072 + x) * 3;
-    glm::vec3 texColor = glm::vec3(data[idx] / 255.f, data[idx + 1] / 255.f, data[idx + 2] / 255.f);
-    return texColor;
+    unsigned char *data = m.getTextureData();
+
+    int x = uv.x * m.getTextureSize().x;
+    int y = uv.y * m.getTextureSize().y;
+    int idx = (y * m.getTextureSize().x + x) * m.getTextureChannels();
+    glm::vec3 texColor = glm::vec3(data[idx], data[idx + 1], data[idx + 2]) / 255.f;
 
 
-
-    return glm::vec3(1.f, 1.f, 1.f);
-
-    //Compute PhongLighting
+    //PhongLighting
     glm::vec3 lightVectNorm = glm::normalize(light - pos);
-    float lightDotNorm = glm::dot(glm::normalize(norm), lightVectNorm);
-    //optimalizace odvracene norm - cerna barva
-    if (lightDotNorm <= 0.f) {
-        outFragment = glm::vec4(0.f);
-        return outFragment;
+    float diffuse = glm::dot(glm::normalize(norm), lightVectNorm);
+    if (diffuse <= 0.f) {
+        return glm::vec3(0.f);
     }
 
-    glm::vec3 camera(0.0f, 0.0f, 4.f);//TODO BEWARE
-    glm::vec3 defColor;
-    float white = 1.f;//snow and light color 1 - no need to multiply
-    float t;
-
-    //sinewave texture
-    if (glm::fract(5.f * (pos.x + glm::sin(pos.y * 10.f) / 10.f)) < 0.5f)
-        defColor = {0.f, 0.5f, 0.f};
-    else
-        defColor = {1.f, 1.f, 0.f};
-
-    //snow normal
-    if (norm.y < 0)
-        t = 0;
-    else
-        t = glm::pow(norm.y, 2);
-    //snow;
-    glm::vec3 of = glm::vec3((defColor + t * (white - defColor)).x, (defColor + t * (white - defColor)).y, 0.f);
-
-    float diffuse = lightDotNorm;
     float specular = glm::pow(
             glm::clamp(glm::dot(lightVectNorm, -glm::reflect(glm::normalize(camera - pos), norm)), 0.f, 1.f), 40.f);
-    glm::vec3 final = glm::clamp(diffuse * of + specular, 0.f, 1.f);
+    glm::vec3 final = glm::clamp(diffuse * texColor + specular, 0.f, 1.f);
     return final;
 }
 
-oVertex GPU::VS(const BunnyVertex &vertex) {
+oVertex GPU::VS(const iVertex &vertex) {
     glm::mat4 mvp = projectionMatrix * viewMatrix * glm::mat4(1.0f);
     oVertex outVertex;
     outVertex.position = mvp * glm::vec4(vertex.position, 1.0f);

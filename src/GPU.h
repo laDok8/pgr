@@ -7,20 +7,20 @@
 
 class GPU {
 public:
-    GPU(const int WIDTH, const int HEIGHT);
+    GPU(const int WIDTH, const int HEIGHT, const model &m);
 
     ~GPU();
 
-    float *render(glm::mat4 viewMatrix);
-    unsigned char* data;
+    float *render(glm::mat4 viewMatrix, glm::vec3 camera);
 
 private:
 
-
     float *color_buffer, *depth_buffer;
     glm::mat4 viewMatrix;
+    glm::vec3 camera;
     glm::mat4 projectionMatrix;
     int WIDTH, HEIGHT;
+    model m;
 
     void setPixel(int x, int y, float r, float g, float b);
 
@@ -30,7 +30,7 @@ private:
 
     void rasterizeTriangle(std::vector<primitive> primitives);
 
-    oVertex VS(const BunnyVertex &vertex);
+    oVertex VS(const iVertex &vertex);
 
     std::vector<primitive> clip(primitive p);
 

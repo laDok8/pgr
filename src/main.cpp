@@ -4,7 +4,6 @@
 
 // Include the standard C++ headers
 #include <cstring>
-#include <vector>
 #include <iostream>
 
 // Include the project headers
@@ -44,9 +43,15 @@ int main() {
         return -1;
     }
 
+    // Load the bunny model only once
+    //TODO: change path if needed
+    std::string objPath = "model/bunny.obj";
+    std::string texturePath = "model/bunny.png";
+    model m(objPath.c_str(), texturePath.c_str());
+
     // Create a window and make its context current
     GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "CPU Bunny", NULL, NULL);
-    GPU bunny(WIDTH, HEIGHT);
+    GPU bunny(WIDTH, HEIGHT, m);
 
     // Set key callback
     glfwSetKeyCallback(window, key_callback);
@@ -60,7 +65,7 @@ int main() {
     // Set the clear color to black
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-    int x=0;
+
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         // Clear the color buffer
@@ -68,7 +73,7 @@ int main() {
 
         glm::vec3 cam = glm::vec3(radius * cos(angle), 0.0f, radius * sin(angle));
         glm::mat4 viewMatrix = glm::lookAt(cam, target, cameraUp);
-        float *pixels = bunny.render(viewMatrix);
+        float *pixels = bunny.render(viewMatrix,cam);
 
         // Draw the color buffer
         glDrawPixels(WIDTH, HEIGHT, GL_RGB, GL_FLOAT, pixels);
