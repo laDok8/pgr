@@ -14,7 +14,7 @@ GPU::GPU(const int WIDTH, const int HEIGHT) {
     this->HEIGHT = HEIGHT;
     color_buffer = new float[WIDTH * HEIGHT * 3];
     depth_buffer = new float[WIDTH * HEIGHT * 3];
-    projectionMatrix = glm::perspective(glm::radians(45.0f), (float) WIDTH / (float) HEIGHT, 0.1f, 100.0f);;
+    projectionMatrix = glm::perspective(45.0f, (float) WIDTH / (float) HEIGHT, 0.1f, 100.0f);;
 }
 
 GPU::~GPU() {
@@ -44,75 +44,75 @@ glm::vec3 GPU::barycentric(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 p
     return bary;
 }
 
-void GPU::rasterizeTriangle(const vector<primitive> primitives) {
-
-    glm::mat4 mvp = projectionMatrix * viewMatrix * glm::mat4(1.0f);
-
-    vector<array<glm::vec3, 3>> transformedTriangles;
+void GPU::rasterizeTriangle(vector<primitive> primitives) {
     for (const auto &triangle: primitives) {
-        oPrimitive v;
-        for (int i = 0; i < 3; i++) {
-            //to clip space
-            glm::vec4 t1 = mvp * glm::vec4(triangle[i].position, 1.0f);
-
-            v[i].position = t1;
-        }
-
-        //clip may result to 0-2 triangles
-        vector<oPrimitive> clipped = clip(v);
-        for (auto &t: clipped) {
-            array<glm::vec3, 3> transformedTriangle;
-            for (int i = 0; i < 3; i++) {
-                //to screen space
-                glm::vec3 t1;
-                t1.x = (t[i].position.x / t[i].position.w + 1.0f) * WIDTH / 2.0f;
-                t1.y = (t[i].position.y / t[i].position.w + 1.0f) * HEIGHT / 2.0f;
-                t1.z = t[i].position.z / t[i].position.w;
-                transformedTriangle[i] = t1;
-            }
-            transformedTriangles.push_back(transformedTriangle);
-        }
-    }
-
-
-    //rasterize
-    for (const auto &triangle: transformedTriangles) {
         int minX = WIDTH - 1;
         int maxX = 0;
         int minY = HEIGHT - 1;
         int maxY = 0;
         for (int i = 0; i < 3; i++) {
-            minX = min(minX, static_cast<int>(triangle[i].x));
-            maxX = max(maxX, static_cast<int>(triangle[i].x));
-            minY = min(minY, static_cast<int>(triangle[i].y));
-            maxY = max(maxY, static_cast<int>(triangle[i].y));
+            minX = min(minX, static_cast<int>(triangle[i].position.x));
+            maxX = max(maxX, static_cast<int>(triangle[i].position.x));
+            minY = min(minY, static_cast<int>(triangle[i].position.y));
+            maxY = max(maxY, static_cast<int>(triangle[i].position.y));
         }
+        //TODO: popsat algo
         // Iterate over bounding box and rasterize triangle
         for (int y = minY; y <= maxY; y++) {
             for (int x = minX; x <= maxX; x++) {
-                glm::vec3 bary = barycentric(triangle[0], triangle[1], triangle[2], glm::vec3(x, y, 0.0f));
+                glm::vec3 bary = barycentric(triangle[0].position, triangle[1].position, triangle[2].position,
+                                             glm::vec3(x, y, 0.0f));
+                //inside triangle
                 if (bary.x < 0 || bary.y < 0 || bary.z < 0) continue;
 
-                glm::vec3 color = glm::vec3(bary.z, 1.0f, 1.0f);
-                if(true){
-                    color = FS(bary);
+                iFrag myFragment;
+                myFragment.position = {x + 0.5f, y + 0.5f, 1, 1};
+
+                float z = bary.x * triangle[0].position.z + bary.y * triangle[1].position.z +
+                          bary.z * triangle[2].position.z;
+                myFragment.position.z = z;
+
+                //depth test
+                if (depth_buffer[x + y * WIDTH] >= z) continue;
+
+                //interpolate attributes
+                for (int i = 0; i < triangle[0].attrib.size(); i++) {
+                    myFragment.attrib.push_back({bary.x * triangle[0].attrib[i] + bary.y * triangle[1].attrib[i] +
+                                                 bary.z * triangle[2].attrib[i]});
                 }
+                //print first attrib x,y for debugging
+                //std::cout << myFragment.attrib[0].x << " " << myFragment.attrib[0].y << std::endl;
+                //print bary
+                //std::cout << bary.x << " " << bary.y << " " << bary.z << std::endl;
+
+
+                //smaz
+                glm::vec3 pos({bary.x * triangle[0].position.x + bary.y * triangle[1].position.x +
+                               bary.z * triangle[2].position.x,
+                               bary.x * triangle[0].position.y + bary.y * triangle[1].position.y +
+                               bary.z * triangle[2].position.y,
+                               bary.x * triangle[0].position.z + bary.y * triangle[1].position.z +
+                               bary.z * triangle[2].position.z});
+                //normalize pos
+                pos.x = pos.x / WIDTH;
+                pos.y = pos.y / HEIGHT;
+
+                glm::vec3 color = FS(myFragment);
 
                 // Set pixel color using barycentric coordinates
-                if (depth_buffer[x + y * WIDTH] < bary.z) {
-                    setPixel(x, y, color.x, color.y, color.z);
-                    depth_buffer[x + y * WIDTH] = bary.z;
-                }
+                setPixel(x, y, color.x, color.y, color.z);
+                depth_buffer[x + y * WIDTH] = bary.z;
             }
+            //std::cout << "STOP" << std::endl;
+            //if(y != minY)
+            //    break;
         }
     }
-
 }
 
+vector<primitive> GPU::clip(primitive p) {
 
-vector<oPrimitive> GPU::clip(oPrimitive p) {
-
-    vector<oPrimitive> clippedPrimitives;
+    vector<primitive> clippedPrimitives;
     std::vector<oVertex> overtex({p[0], p[1], p[2]});
     struct oVertex help;
     //TODO: rework
@@ -151,6 +151,7 @@ vector<oPrimitive> GPU::clip(oPrimitive p) {
 
         }
     }
+    //TODO: add interpolation
 
     //empty
     const glm::vec4 bad{0, 0, 0, 0};
@@ -161,29 +162,61 @@ vector<oPrimitive> GPU::clip(oPrimitive p) {
     //asembly
     if (overtex.size() == 3) {
         if (!delFlag)
-            clippedPrimitives.push_back({overtex[0].position, overtex[1].position, overtex[2].position});
+            clippedPrimitives.push_back({overtex[0], overtex[1], overtex[2]});
         else
-            clippedPrimitives.push_back({overtex[2].position, overtex[1].position, overtex[0].position});
+            clippedPrimitives.push_back({overtex[2], overtex[1], overtex[0]});
     }
     if (overtex.size() == 4) {
-        clippedPrimitives.push_back({overtex[0].position, overtex[1].position, overtex[2].position});
-        clippedPrimitives.push_back({overtex[0].position, overtex[2].position, overtex[3].position});
+        clippedPrimitives.push_back({overtex[0], overtex[1], overtex[2]});
+        clippedPrimitives.push_back({overtex[0], overtex[2], overtex[3]});
 
     }
     return clippedPrimitives;
 }
 
 
+//returns assembled primitives in clip space
 vector<primitive> GPU::getPrimitives() {
-    vector<primitive> primitives;
+    vector<primitive> triangles;
 
+    // pull VS and assembly
+    //for (auto &indice: squareIndices) {
+    //    primitive triangle = {VS(squareVertices[indice[0]]), VS(squareVertices[indice[1]]),
+    //                          VS(squareVertices[indice[2]])};
+    //    triangles.push_back(triangle);
+    //}
     for (auto &indice: bunnyIndices) {
-        primitive triangle = {bunnyVertices[indice[0]], bunnyVertices[indice[1]], bunnyVertices[indice[2]]};
-        primitives.push_back(triangle);
+        primitive triangle = {VS(bunnyVertices[indice[0]]), VS(bunnyVertices[indice[1]]), VS(bunnyVertices[indice[2]])};
+        triangles.push_back(triangle);
+    }
+
+    vector<primitive> clippedTriangles;
+    //clipping
+    for (auto &triangle: triangles) {
+        //clip may result to 0-2 triangles
+        vector<primitive> clipped = clip(triangle);
+        for (auto &t: clipped) {
+            clippedTriangles.push_back(t);
+        }
     }
 
 
-    return primitives;
+    vector<primitive> transformedTriangles;
+    //transform to screen space
+    for (const auto &triangle: clippedTriangles) {
+        primitive transformedTriangle;
+        for (int i = 0; i < 3; i++) {
+            transformedTriangle[i].attrib = triangle[i].attrib;
+            glm::vec3 t1;
+            t1.x = (triangle[i].position.x / triangle[i].position.w + 1.0f) * WIDTH / 2.0f;
+            t1.y = (triangle[i].position.y / triangle[i].position.w + 1.0f) * HEIGHT / 2.0f;
+            t1.z = triangle[i].position.z / triangle[i].position.w;
+            transformedTriangle[i].position = glm::vec4(t1, 1.0f);//W is not necessary
+        }
+        transformedTriangles.push_back(transformedTriangle);
+    }
+
+    return transformedTriangles;
 }
 
 float *GPU::render(glm::mat4 viewMatrix) {
@@ -203,18 +236,54 @@ float *GPU::render(glm::mat4 viewMatrix) {
 
 }
 
-glm::vec3 GPU::FS(glm::vec3 pos) {
+glm::vec3 GPU::FS(iFrag frag) {
 
+    glm::vec3 outFragment;
+
+    glm::vec3 pos = frag.attrib[0];
+    glm::vec3 norm = frag.attrib[1];
+    glm::vec3 light = glm::vec3(10.f,10.f,10.f);
+
+    //Compute PhongLighting
+    glm::vec3 lightVectNorm = glm::normalize(light-pos);
+    float lightDotNorm = glm::dot(glm::normalize(norm), lightVectNorm);
+    //optimalizace odvracene norm - cerna barva
+    if(lightDotNorm <= 0.f) {
+        outFragment = glm::vec4(0.f);
+        return outFragment;
+    }
+
+    glm::vec3 camera(0.0f, 0.0f, 4.f);//TODO BEWARE
     glm::vec3 defColor;
-    //TODO: x,y weird values and segfault
+    float white = 1.f;//snow and light color 1 - no need to multiply
+    float t;
 
-    defColor = glm::vec3(pos.x, pos.y, 0.5f);
-    //sinewave texturew
-    //if(glm::fract(glm::sin(pos.y*10.f)/10.f) < 0.5f)
-    //    defColor = {0.f,0.5f,0.f};
-    //else
-    //    defColor = {1.f,1.f,0.f};
+    //sinewave texture
+    if(glm::fract(5.f*(pos.x+glm::sin(pos.y*10.f)/10.f)) < 0.5f)
+        defColor = {0.f,0.5f,0.f};
+    else
+        defColor = {1.f,1.f,0.f};
 
-    return defColor;
+    //snow normal
+    if(norm.y < 0)
+        t = 0;
+    else
+        t = glm::pow(norm.y,2);
+    //snow;
+    glm::vec3 of = glm::vec3((defColor + t*(white-defColor)).x,(defColor + t*(white-defColor)).y,0.f);
+
+    float diffuse = lightDotNorm;
+    float specular = glm::pow(glm::clamp(glm::dot(lightVectNorm, -glm::reflect(glm::normalize(camera-pos),norm)),0.f,1.f),40.f);
+    glm::vec3 final = glm::clamp(diffuse*of+specular,0.f,1.f);
+    return final;
 }
 
+oVertex GPU::VS(const BunnyVertex &vertex) {
+    glm::mat4 mvp = projectionMatrix * viewMatrix * glm::mat4(1.0f);
+    oVertex outVertex;
+    outVertex.position = mvp * glm::vec4(vertex.position, 1.0f);
+    outVertex.attrib.push_back(vertex.position);
+    outVertex.attrib.push_back(vertex.normal);
+
+    return outVertex;
+}

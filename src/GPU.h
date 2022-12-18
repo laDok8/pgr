@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include "model.h"
-//#include <glm/ext/matrix_clip_space.hpp>
 
 class GPU {
 public:
@@ -28,11 +27,13 @@ private:
 
     std::vector<primitive> getPrimitives();
 
-    void rasterizeTriangle(const std::vector<primitive> primitives);
+    void rasterizeTriangle(std::vector<primitive> primitives);
 
-    std::vector<oPrimitive> clip(oPrimitive p);
+    oVertex VS(const BunnyVertex &vertex);
 
-    glm::vec3 FS(glm::vec3 vec1);
+    std::vector<primitive> clip(primitive p);
+
+    glm::vec3 FS(iFrag pos);
 };
 
 

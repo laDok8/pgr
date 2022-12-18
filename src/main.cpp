@@ -15,36 +15,29 @@
 const int WIDTH = 640;
 const int HEIGHT = 480;
 glm::vec3 position(0.0f, 0.0f, 4.f);
-glm::vec3 trs(0.0f, 0.0f, 0.0f);
+glm::vec3 target(0.0f, 0.0f, 0.0f);
+glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    if (key == GLFW_KEY_W && action == GLFW_PRESS)
-        position.x += 0.2f;
-    else if (key == GLFW_KEY_S && action == GLFW_PRESS)
-        position.x -= 0.2f;
-    else if (key == GLFW_KEY_A && action == GLFW_PRESS)
-        position.y += 0.2f;
-    else if (key == GLFW_KEY_D && action == GLFW_PRESS)
-        position.y -= 0.2f;
-    else if (key == GLFW_KEY_Q && action == GLFW_PRESS)
-        position.z += 0.2f;
-    else if (key == GLFW_KEY_E && action == GLFW_PRESS)
-        position.z -= 0.2f;
-    else if (key == GLFW_KEY_UP && action == GLFW_PRESS)
-        trs.x += 0.2f;
-    else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
-        trs.x -= 0.2f;
-    else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-        trs.y += 0.2f;
-    else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
-        trs.y -= 0.2f;
-    else if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS)
-        trs.z += 0.2f;
-    else if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS)
-        trs.z -= 0.2f;
+
+    glm::vec3 cameraFront = -position;
+    float cameraSpeed = 0.1f;
+
+
+    // Update camera position and orientation based on user input
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        position += cameraSpeed * cameraFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        position -= cameraSpeed * cameraFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        position -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        position += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    }
 }
 
 
@@ -81,14 +74,7 @@ int main() {
         // Clear the color buffer
         glClear(GL_COLOR_BUFFER_BIT);
 
-
-        glm::mat4 viewMatrix = glm::lookAt(
-                position, // camera position
-                glm::vec3(0.0f, 0.0f, 0.0f), // target position
-                glm::vec3(0.0f, 1.0f, 0.0f)  // up vector
-        );
-
-        viewMatrix = glm::translate(viewMatrix, trs);
+        glm::mat4 viewMatrix = glm::lookAt(position, target, cameraUp);
         float *pixels = bunny.render(viewMatrix);
 
         // Draw the color buffer
