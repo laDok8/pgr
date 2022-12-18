@@ -15,9 +15,8 @@ Důraz bude kladen na jednoduchost a přehlednost zdrojového kódu, na efektivi
 - [ ] [optional] kresli trojuhelnik + texturou
 - [x] [optional] kresli trojuhelnik + osvetlenim
 - [x] [optional] kresli trojuhelnik + z-bufferem
-- [ ] [optional] kresli trojuhelnik + backface cullingem
+- [] [optional] kresli trojuhelnik + backface cullingem
 - [ ] [optional] kresli trojuhelnik + normal mapping
 - [ ] [optional] kresli trojuhelnik + shadow mapping
 - [ ] [optional] kresli trojuhelnik + deferred shading
-- [ ] [optional] kresli trojuhelnik + volumetric lighting
 - [ ] [optional] kresli trojuhelnik + ray tracing

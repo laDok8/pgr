@@ -52,7 +52,6 @@ void GPU::rasterizeTriangle(vector<primitive> primitives) {
             minY = min(minY, static_cast<int>(triangle[i].position.y));
             maxY = max(maxY, static_cast<int>(triangle[i].position.y));
         }
-        //cout << "minX: " << minX << " maxX: " << maxX << " minY: " << minY << " maxY: " << maxY << endl;
         //TODO: popsat algo
         // Iterate over bounding box and rasterize triangle
         for (int y = minY; y <= maxY; y++) {
@@ -81,22 +80,6 @@ void GPU::rasterizeTriangle(vector<primitive> primitives) {
                     myFragment.attrib.push_back({bary.x * triangle[0].attrib[i] + bary.y * triangle[1].attrib[i] +
                                                  bary.z * triangle[2].attrib[i]});
                 }
-                //print first attrib x,y for debugging
-                //std::cout << myFragment.attrib[0].x << " " << myFragment.attrib[0].y << std::endl;
-                //print bary
-                //std::cout << bary.x << " " << bary.y << " " << bary.z << std::endl;
-
-
-                //smaz
-                glm::vec3 pos({bary.x * triangle[0].position.x + bary.y * triangle[1].position.x +
-                               bary.z * triangle[2].position.x,
-                               bary.x * triangle[0].position.y + bary.y * triangle[1].position.y +
-                               bary.z * triangle[2].position.y,
-                               bary.x * triangle[0].position.z + bary.y * triangle[1].position.z +
-                               bary.z * triangle[2].position.z});
-                //normalize pos
-                pos.x = pos.x / WIDTH;
-                pos.y = pos.y / HEIGHT;
 
                 glm::vec3 color = FS(myFragment);
 
@@ -104,8 +87,6 @@ void GPU::rasterizeTriangle(vector<primitive> primitives) {
                 setPixel(x, y, color.x, color.y, color.z);
                 depth_buffer[x + y * WIDTH] = z;
             }
-            //if(y != minY)
-            //    break;
         }
     }
 }
@@ -184,11 +165,11 @@ vector<primitive> GPU::getPrimitives() {
     vector<primitive> triangles;
 
     // pull VS and assembly
-    for (auto &indice: squareIndices) triangles.push_back({VS(squareVertices[indice[0]]), VS(squareVertices[indice[1]]), VS(squareVertices[indice[2]])});
-    //for (auto &indice: bunnyIndices) {
-    //    primitive triangle = {VS(bunnyVertices[indice[0]]), VS(bunnyVertices[indice[1]]), VS(bunnyVertices[indice[2]])};
-    //    triangles.push_back(triangle);
-    //}
+    //for (auto &indice: squareIndices) triangles.push_back({VS(squareVertices[indice[0]]), VS(squareVertices[indice[1]]), VS(squareVertices[indice[2]])});
+    for (auto &indice: bunnyIndices) {
+        primitive triangle = {VS(bunnyVertices[indice[0]]), VS(bunnyVertices[indice[1]]), VS(bunnyVertices[indice[2]])};
+        triangles.push_back(triangle);
+    }
 
     vector<primitive> clippedTriangles;
     //clipping
