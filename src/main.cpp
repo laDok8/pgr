@@ -6,6 +6,7 @@
 // Include the standard C++ headers
 #include <cstring>
 #include <vector>
+#include <iostream>
 
 // Include the project headers
 #include "model.h"
@@ -17,26 +18,23 @@ const int HEIGHT = 480;
 glm::vec3 position(0.0f, 0.0f, 4.f);
 glm::vec3 target(0.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
+float radius = 4.0f;
+float angle = glm::half_pi<float>();
 
 
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-
-    glm::vec3 cameraFront = -position;
-    float cameraSpeed = 0.1f;
-
-
     // Update camera position and orientation based on user input
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        position += cameraSpeed * cameraFront;
+        radius -= 0.3f;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        position -= cameraSpeed * cameraFront;
+        radius += 0.3f;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        position -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        angle -= 0.1f;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        position += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        angle += 0.1f;
     }
 }
 
@@ -69,12 +67,14 @@ int main() {
     // Set the clear color to black
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
+    int x=0;
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         // Clear the color buffer
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glm::mat4 viewMatrix = glm::lookAt(position, target, cameraUp);
+        glm::vec3 cam = glm::vec3(radius * cos(angle), 0.0f, radius * sin(angle));
+        glm::mat4 viewMatrix = glm::lookAt(cam, target, cameraUp);
         float *pixels = bunny.render(viewMatrix);
 
         // Draw the color buffer

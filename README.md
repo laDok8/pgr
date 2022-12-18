@@ -13,7 +13,7 @@ Důraz bude kladen na jednoduchost a přehlednost zdrojového kódu, na efektivi
 - [x] kralik
 - [x] [optional] kresli trojuhelnik s barvou
 - [ ] [optional] kresli trojuhelnik + texturou
-- [ ] [optional] kresli trojuhelnik + osvetlenim
+- [x] [optional] kresli trojuhelnik + osvetlenim
 - [x] [optional] kresli trojuhelnik + z-bufferem
 - [ ] [optional] kresli trojuhelnik + backface cullingem
 - [ ] [optional] kresli trojuhelnik + normal mapping
