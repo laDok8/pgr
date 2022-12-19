@@ -2,12 +2,11 @@
 #define PGRPROJECT_GPU_H
 
 #include <glm/glm.hpp>
-#include <glm/gtx/string_cast.hpp>
 #include "model.h"
 
 class GPU {
 public:
-    GPU(const int WIDTH, const int HEIGHT, const model &m);
+    GPU(int WIDTH, int HEIGHT, const model &m);
 
     ~GPU();
 
@@ -16,25 +15,24 @@ public:
 private:
 
     float *color_buffer, *depth_buffer;
-    glm::mat4 viewMatrix;
-    glm::vec3 camera;
-    glm::mat4 projectionMatrix;
+    glm::mat4 viewMatrix{}, projectionMatrix{};
+    glm::vec3 camera{};
     int WIDTH, HEIGHT;
     model m;
 
-    void setPixel(int x, int y, float r, float g, float b);
-
-    glm::vec3 barycentric(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 p);
+    static glm::vec3 barycentric(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 p);
 
     std::vector<primitive> getPrimitives();
 
-    void rasterizeTriangle(std::vector<primitive> primitives);
+    void rasterizeTriangle(const std::vector<primitive> &primitives);
 
     oVertex VS(const iVertex &vertex);
 
-    std::vector<primitive> clip(primitive p);
+    static std::vector<primitive> clip(primitive p);
 
     glm::vec3 FS(iFrag pos);
+
+    void setPixel(int x, int y, glm::vec3 color);
 };
 
 

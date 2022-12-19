@@ -1,7 +1,6 @@
 #ifndef PGRPROJECT_MODEL_H
 #define PGRPROJECT_MODEL_H
 
-#include <cstdint>
 #include <glm/glm.hpp>
 #include <array>
 #include <vector>
@@ -13,12 +12,12 @@ struct iVertex {
 };
 struct oVertex {
     glm::vec4 position;
-    std::vector<glm::vec3> attrib;    // 0- pos 1- norm 2-uv
+    std::vector<glm::vec3> attrib;    // [pos, norm, uv]
 };
 
 struct iFrag {
     glm::vec4 position;
-    std::vector<glm::vec3> attrib;    // 0- pos 1- norm 2-uv
+    std::vector<glm::vec3> attrib;    // [pos, norm, uv]
 };
 
 using VertexIndex = uint32_t;
@@ -40,16 +39,16 @@ public:
 
     unsigned char *getTextureData();
 
-    glm::vec2 getTextureSize();
+    glm::vec2 getTextureSize() const;
 
-    int getTextureChannels();
+    int getTextureChannels() const;
 
 
 private:
     std::vector<struct iVertex> objDataVertex;
     std::vector<std::vector<VertexIndex>> objDataIndice;
-    int textureWidth, textureHeight, textureChannels;
-    unsigned char *textureData;
+    int textureWidth{}, textureHeight{}, textureChannels{};
+    unsigned char *textureData{};
 };
 
 
