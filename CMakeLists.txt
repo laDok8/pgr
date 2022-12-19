@@ -16,7 +16,6 @@ set(SOURCES
         src/main.cpp
         src/model.cpp src/model.h src/GPU.cpp src/GPU.h src/model.cpp)
 
-
 add_definitions(
         -DTW_STATIC
         -DTW_NO_LIB_PRAGMA
