@@ -218,7 +218,7 @@ glm::vec3 GPU::FS(iFrag frag) {
     unsigned char *texture = m.getTextureData();
 
     int x = uv.x * m.getTextureSize().x;
-    int y = uv.y * m.getTextureSize().y;
+    int y = (1.f-uv.y) * m.getTextureSize().y;
     int idx = (y * m.getTextureSize().x + x) * m.getTextureChannels();
     glm::vec3 texColor = glm::vec3(texture[idx], texture[idx + 1], texture[idx + 2]) / 255.f;
 

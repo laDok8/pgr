@@ -6,9 +6,9 @@
 #include "model.h"
 #include "GPU.h"
 
-const int WIDTH = 640;
-const int HEIGHT = 480;
-glm::vec3 position(0.0f, 0.0f, 4.f);
+const int WIDTH = 1920;
+const int HEIGHT = 1080;
+//glm::vec3 position(0.0f, 0.0f, 4.f);
 glm::vec3 target(0.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
 float radius = 0.8f;
